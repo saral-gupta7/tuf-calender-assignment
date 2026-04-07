@@ -1,69 +1,50 @@
 # TUF Frontend Challenge
 
-A frontend challenge project built with Next.js, React, and TypeScript.
+An interactive wall-calendar experience built for the frontend engineering assignment. The app combines month-specific imagery, date-range selection, and integrated notes in a single responsive layout.
 
-## Project Status
+## Feature Highlights
 
-The repository is currently set up with a modern frontend foundation and is ready for feature implementation.
+- Physical wall-calendar inspired layout with a large monthly hero image.
+- Month-specific artwork that changes as the user navigates the calendar.
+- Date-range selection with clear start, end, and in-between states.
+- Integrated monthly notes plus notes attached to completed date ranges.
+- Local persistence with Zustand so the selection and notes survive refreshes.
+- Responsive layout tuned for both desktop and mobile use.
+- Light and dark presentation modes.
 
-## Links
+## Stack
 
-- **Live Deployment:** [View on Vercel](#) _(add your link)_
-- **Video Walkthrough:** [Watch Demo](#) _(add your link)_
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Zustand
+- Motion
 
-## Tech Stack
+## Architecture Notes
 
-- **Framework:** Next.js 16 (App Router)
-- **UI Library:** React 19
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS v4
-- **Animation:** Motion
-- **State Management:** Zustand
-- **Linting:** ESLint + `eslint-config-next`
-- **Deployment:** Vercel
+- `app/page.tsx` keeps the route as a server component and mounts the interactive client experience.
+- `components/calendar/*` splits the UI into focused pieces: hero, grid, and notes.
+- `store/store.ts` owns the calendar interactions and persistence logic to avoid prop drilling.
+- `lib/calendar.ts` contains pure date helpers, keeping selection logic separate from rendering.
+- `lib/month-metadata.ts` maps each month to its image and visual styling.
 
-## Why I Chose This Tech Stack
+## Running Locally
 
-- **Next.js:** Gives routing, layout support, optimized assets, and an excellent developer experience out of the box.
-- **React 19:** Strong component model and ecosystem for building interactive UI quickly.
-- **TypeScript:** Adds safer refactors and clearer contracts as the project grows.
-- **Tailwind CSS v4:** Fast, utility-first styling with predictable results and easy responsive design.
-- **Motion:** Smooth UI transitions and interaction feedback without heavy setup.
-- **Zustand:** Lightweight state management that is simple for frontend-only apps and avoids boilerplate.
-- **Vercel:** Best fit for Next.js deployment with minimal configuration and fast previews.
+```bash
+npm install
+npm run dev
+```
 
-## Local Development
+Then open [http://localhost:3000](http://localhost:3000).
 
-1. Clone the repository:
+## Scripts
 
-   ```bash
-   git clone <your-repo-url>
-   cd <project-directory>
-   ```
+- `npm run dev` starts the development server.
+- `npm run build` creates a production build.
+- `npm run lint` runs ESLint.
 
-2. Install dependencies:
+## Submission Checklist
 
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Available Scripts
-
-- `npm run dev` - Start local development server.
-- `npm run build` - Create production build.
-- `npm run start` - Start production server.
-- `npm run lint` - Run ESLint checks.
-
-## Suggested Next Steps
-
-- Implement the challenge UI and interactions in `app/page.tsx`.
-- Replace placeholder links in this README.
-- Add screenshots/GIFs and a short architecture note once implementation is complete.
+- Add your deployed URL to this README if you publish the project.
+- Add your screen-recording link showing desktop, mobile, range selection, and notes behavior.
