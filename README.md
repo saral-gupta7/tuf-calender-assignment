@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TUF Frontend Challenge
 
-## Getting Started
+A frontend challenge project built with Next.js, React, and TypeScript.
 
-First, run the development server:
+## Project Status
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The repository is currently set up with a modern frontend foundation and is ready for feature implementation.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Links
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Live Deployment:** [View on Vercel](#) _(add your link)_
+- **Video Walkthrough:** [Watch Demo](#) _(add your link)_
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- **Framework:** Next.js 16 (App Router)
+- **UI Library:** React 19
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v4
+- **Animation:** Motion
+- **State Management:** Zustand
+- **Linting:** ESLint + `eslint-config-next`
+- **Deployment:** Vercel
 
-To learn more about Next.js, take a look at the following resources:
+## Why I Chose This Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Next.js:** Gives routing, layout support, optimized assets, and an excellent developer experience out of the box.
+- **React 19:** Strong component model and ecosystem for building interactive UI quickly.
+- **TypeScript:** Adds safer refactors and clearer contracts as the project grows.
+- **Tailwind CSS v4:** Fast, utility-first styling with predictable results and easy responsive design.
+- **Motion:** Smooth UI transitions and interaction feedback without heavy setup.
+- **Zustand:** Lightweight state management that is simple for frontend-only apps and avoids boilerplate.
+- **Vercel:** Best fit for Next.js deployment with minimal configuration and fast previews.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Local Development
 
-## Deploy on Vercel
+1. Clone the repository:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   git clone <your-repo-url>
+   cd <project-directory>
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Available Scripts
+
+- `npm run dev` - Start local development server.
+- `npm run build` - Create production build.
+- `npm run start` - Start production server.
+- `npm run lint` - Run ESLint checks.
+
+## Suggested Next Steps
+
+- Implement the challenge UI and interactions in `app/page.tsx`.
+- Replace placeholder links in this README.
+- Add screenshots/GIFs and a short architecture note once implementation is complete.
