@@ -2,105 +2,178 @@
 
 import type { CSSProperties } from "react";
 
+import { formatLongDate } from "@/lib/calendar";
+import type { PlannerEntry, PlannerKind } from "@/store/store";
+
 type NotesPanelProps = {
   accent: string;
-  monthLabel: string;
-  monthNote: string;
-  rangeLabel: string | null;
-  rangeNote: string;
-  onMonthNoteChange: (value: string) => void;
-  onRangeNoteChange: (value: string) => void;
+  description: string;
+  entries: PlannerEntry[];
+  kind: PlannerKind;
+  selectionLabel: string | null;
+  title: string;
+  onDeleteEntry: (entryId: string) => void;
+  onDescriptionChange: (value: string) => void;
+  onKindChange: (value: PlannerKind) => void;
+  onSave: () => void;
+  onTitleChange: (value: string) => void;
 };
 
 export function NotesPanel({
   accent,
-  monthLabel,
-  monthNote,
-  rangeLabel,
-  rangeNote,
-  onMonthNoteChange,
-  onRangeNoteChange,
+  description,
+  entries,
+  kind,
+  selectionLabel,
+  title,
+  onDeleteEntry,
+  onDescriptionChange,
+  onKindChange,
+  onSave,
+  onTitleChange,
 }: NotesPanelProps) {
   return (
-    <section className="border-t border-slate-200/80 p-4 sm:p-6 lg:p-8 dark:border-slate-800">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="flex h-full flex-col rounded-lg border border-slate-200 bg-slate-50 p-4 md:sticky md:top-5 md:max-h-[calc(100vh-2.5rem)] md:overflow-y-auto sm:p-5 lg:p-6">
+      <div className="mb-5 flex flex-col gap-2">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-            Integrated notes
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+            Add note
           </p>
-          <h3 className="mt-2 text-2xl font-semibold tracking-tight">
-            Keep the plan attached to the month
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-800">
+            {selectionLabel ?? "Select a date range"}
           </h3>
-        </div>
-
-        <div
-          className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
-          style={{
-            backgroundColor: `${accent}10`,
-            color: accent,
-          }}
-        >
-          Saved in local storage
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {selectionLabel
+              ? `New items will be saved for ${selectionLabel}.`
+              : "Choose a start and end date, then save a task or event for that range."}
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <article className="rounded-lg border border-slate-200/70 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="mb-4">
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-              Monthly memo
-            </p>
-            <h4 className="mt-2 text-lg font-semibold">{monthLabel} notes</h4>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Capture reminders, goals, or context that applies to the whole
-              month.
-            </p>
-          </div>
+      <div className="grid gap-3">
+        <div className="grid grid-cols-2 gap-2 rounded-full bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => onKindChange("task")}
+            className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              kind === "task"
+                ? "bg-white text-slate-900 shadow"
+                : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            Task
+          </button>
+          <button
+            type="button"
+            onClick={() => onKindChange("event")}
+            className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              kind === "event"
+                ? "bg-white text-slate-900 shadow"
+                : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            Event
+          </button>
+        </div>
 
-          <textarea
-            value={monthNote}
-            onChange={(event) => onMonthNoteChange(event.target.value)}
-            placeholder={`Write your ${monthLabel.toLowerCase()} memo here...`}
-            className="calendar-scrollbar min-h-40 w-full rounded-[1.4rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-transparent focus:ring-2 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-100 dark:placeholder:text-slate-500"
-            style={
-              {
-                "--tw-ring-color": `${accent}66`,
-              } as CSSProperties
-            }
+        <label className="grid gap-2 text-sm font-medium text-slate-800">
+          Title
+          <input
+            value={title}
+            disabled={!selectionLabel}
+            onChange={(event) => onTitleChange(event.target.value)}
+            placeholder="Add a title"
+            className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+            style={{ "--tw-ring-color": `${accent}55` } as CSSProperties}
           />
-        </article>
+        </label>
 
-        <article className="rounded-lg border border-slate-200/70 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/70">
-          <div className="mb-4">
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-              Range note
-            </p>
-            <h4 className="mt-2 text-lg font-semibold">
-              {rangeLabel ?? "Complete a date range"}
-            </h4>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Attach a note to a finished range. Tap the same day twice if you
-              want a single-day entry instead.
-            </p>
-          </div>
-
+        <label className="grid gap-2 text-sm font-medium text-slate-800">
+          Description
           <textarea
-            value={rangeNote}
-            disabled={!rangeLabel}
-            onChange={(event) => onRangeNoteChange(event.target.value)}
-            placeholder={
-              rangeLabel
-                ? "Write a note for the selected range..."
-                : "Finish selecting a range to unlock note attachment."
-            }
-            className="calendar-scrollbar min-h-40 w-full rounded-[1.4rem] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-100 dark:placeholder:text-slate-500 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
-            style={
-              {
-                "--tw-ring-color": `${accent}66`,
-              } as CSSProperties
-            }
+            value={description}
+            disabled={!selectionLabel}
+            onChange={(event) => onDescriptionChange(event.target.value)}
+            placeholder="Describe the task, note, or event details"
+            className="calendar-scrollbar min-h-32 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-transparent focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
+            style={{ "--tw-ring-color": `${accent}55` } as CSSProperties}
           />
-        </article>
+        </label>
+
+        <button
+          type="button"
+          disabled={!selectionLabel || !title.trim()}
+          onClick={onSave}
+          className="inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+          style={{
+            backgroundColor:
+              selectionLabel && title.trim() ? accent : undefined,
+          }}
+        >
+          Save {kind}
+        </button>
+      </div>
+
+      <div className="mt-7 border-t border-slate-200 pt-5">
+        <div className="mb-5 flex flex-col gap-2">
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
+            Saved items
+          </p>
+          <h4 className="text-xl font-semibold tracking-tight text-slate-800">
+            Tasks and events
+          </h4>
+        </div>
+
+        {entries.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
+            Saved notes will appear here after you add a title and press save.
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {entries.map((entry) => (
+              <article
+                key={entry.id}
+                className="rounded-lg border border-slate-200 bg-white p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div
+                      className="inline-flex rounded-sm px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em]"
+                      style={{
+                        backgroundColor: `${accent}14`,
+                        color: accent,
+                      }}
+                    >
+                      {entry.kind}
+                    </div>
+                    <h4 className="mt-3 text-lg font-semibold text-slate-800">
+                      {entry.title}
+                    </h4>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                      {entry.start === entry.end
+                        ? formatLongDate(entry.start)
+                        : `${formatLongDate(entry.start)} - ${formatLongDate(entry.end)}`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteEntry(entry.id)}
+                      aria-label={`Delete ${entry.title}`}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-500 transition hover:bg-red-100 hover:text-red-600"
+                    >
+                      <span className="-mt-0.5 text-base leading-none">-</span>
+                    </button>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {entry.description || "No extra description added."}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

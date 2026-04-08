@@ -1,18 +1,14 @@
 "use client";
 
-import type { CSSProperties } from "react";
-
 import {
-  formatMonthKey,
+  getMonthWindow,
   getRangeLength,
-  getRangeNoteKey,
+  getSelectedRange,
   getSelectionLabel,
-  getVisibleRange,
   normalizeMonthKey,
 } from "@/lib/calendar";
 import { getMonthMetadata } from "@/lib/month-metadata";
 import { useCalendarStore } from "@/store/store";
-import { useTheme } from "next-themes";
 
 import { CalendarGrid } from "@/components/calendar/calendar-grid";
 import { HeroPanel } from "@/components/calendar/hero-panel";
@@ -22,120 +18,84 @@ export function CalendarExperience() {
   const viewedMonth = useCalendarStore((state) => state.viewedMonth);
   const selectedStart = useCalendarStore((state) => state.selectedStart);
   const selectedEnd = useCalendarStore((state) => state.selectedEnd);
-  const hoveredDate = useCalendarStore((state) => state.hoveredDate);
-  const monthNotes = useCalendarStore((state) => state.monthNotes);
-  const rangeNotes = useCalendarStore((state) => state.rangeNotes);
+  const draftKind = useCalendarStore((state) => state.draftKind);
+  const draftTitle = useCalendarStore((state) => state.draftTitle);
+  const draftDescription = useCalendarStore((state) => state.draftDescription);
+  const entries = useCalendarStore((state) => state.entries);
+  const deleteEntry = useCalendarStore((state) => state.deleteEntry);
   const goToAdjacentMonth = useCalendarStore(
     (state) => state.goToAdjacentMonth,
   );
-  const setHoveredDate = useCalendarStore((state) => state.setHoveredDate);
   const selectDate = useCalendarStore((state) => state.selectDate);
-  const applyPreset = useCalendarStore((state) => state.applyPreset);
-  const clearSelection = useCalendarStore((state) => state.clearSelection);
-  const updateMonthNote = useCalendarStore((state) => state.updateMonthNote);
-  const updateRangeNote = useCalendarStore((state) => state.updateRangeNote);
-  const { resolvedTheme, setTheme } = useTheme();
+  const setDraftKind = useCalendarStore((state) => state.setDraftKind);
+  const setDraftTitle = useCalendarStore((state) => state.setDraftTitle);
+  const setDraftDescription = useCalendarStore(
+    (state) => state.setDraftDescription,
+  );
+  const saveEntry = useCalendarStore((state) => state.saveEntry);
 
   const monthDate = normalizeMonthKey(viewedMonth);
-  const monthKey = formatMonthKey(monthDate);
   const monthMetadata = getMonthMetadata(monthDate.getMonth());
-  const visibleRange = getVisibleRange(selectedStart, selectedEnd, hoveredDate);
-  const completeRangeKey =
-    selectedStart && selectedEnd
-      ? getRangeNoteKey(selectedStart, selectedEnd)
-      : null;
-  const selectionLabel = getSelectionLabel(visibleRange);
-  const selectionLength = getRangeLength(visibleRange);
-  const monthNote = monthNotes[monthKey] ?? "";
-  const rangeNote = completeRangeKey
-    ? (rangeNotes[completeRangeKey] ?? "")
-    : "";
+  const activeRange = getSelectedRange(selectedStart, selectedEnd);
+  const selectionLabel = getSelectionLabel(activeRange);
+  const selectionLength = getRangeLength(activeRange);
+  const visibleWindow = getMonthWindow(monthDate);
+  const visibleEntries = entries.filter(
+    (entry) => entry.start <= visibleWindow.end && entry.end >= visibleWindow.start,
+  );
+  const accent = monthMetadata.accent;
 
   return (
-    <main
-      className="min-h-screen text-slate-900 transition-colors dark:text-slate-100"
-      style={
-        {
-          "--calendar-accent": monthMetadata.accent,
-          "--calendar-glow": monthMetadata.glow,
-        } as CSSProperties
-      }
-    >
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <div>
-              {/* <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Interactive wall calendar planner
-              </h1> */}
-            </div>
+    <main className="min-h-screen px-3 py-3 text-slate-900 sm:px-5 sm:py-5">
+      <div className="min-h-[calc(100vh-1.5rem)] w-full rounded-[2rem] bg-slate-100 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:min-h-[calc(100vh-2.5rem)] sm:rounded-[2.5rem] sm:p-5">
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+          <div className="hidden lg:block">
+            <HeroPanel
+              image={monthMetadata.image}
+              label={monthMetadata.label}
+              rangeLabel={activeRange ? selectionLabel : null}
+              subtitle={monthMetadata.subtitle}
+            />
           </div>
 
-          {/* <button
-            type="button"
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:text-slate-950 dark:border-slate-700 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:border-slate-500"
-          >
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: monthMetadata.accent }}
-            />
-            {resolvedTheme === "dark"
-              ? "Switch to light mode"
-              : "Switch to dark mode"}
-          </button> */}
-        </div>
-
-        <div className="relative overflow-hidden rounded-xl border border-white/70 bg-white/85 shadow-(--paper-shadow) backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/78">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.72),transparent_72%)] dark:bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_72%)]" />
-
-          <div className="grid lg:grid-cols-[minmax(340px,0.92fr)_minmax(0,1.3fr)]">
-            <div className="border-b border-slate-200/80 lg:border-r lg:border-b-0 dark:border-slate-800">
+          <div className="grid gap-5 md:min-w-0">
+            <div className="md:block lg:hidden">
               <HeroPanel
-                accent={monthMetadata.accent}
-                currentMonthDate={monthDate}
                 image={monthMetadata.image}
                 label={monthMetadata.label}
-                monthNoteLength={monthNote.trim().length}
-                selectionLabel={selectionLabel}
-                selectionLength={selectionLength}
+                rangeLabel={activeRange ? selectionLabel : null}
                 subtitle={monthMetadata.subtitle}
-                onApplyPreset={applyPreset}
-                onClearSelection={clearSelection}
               />
             </div>
 
-            <div className="flex flex-col">
-              <CalendarGrid
-                accent={monthMetadata.accent}
-                monthDate={monthDate}
-                selectedEnd={selectedEnd}
-                selectedStart={selectedStart}
-                visibleRange={visibleRange}
-                onHoverDate={setHoveredDate}
-                onNextMonth={() => goToAdjacentMonth(1)}
-                onPreviousMonth={() => goToAdjacentMonth(-1)}
-                onSelectDate={selectDate}
-              />
+            <CalendarGrid
+              accent={accent}
+              monthDate={monthDate}
+              selectedEnd={selectedEnd}
+              selectedStart={selectedStart}
+              selectionLabel={selectionLabel}
+              selectionLength={selectionLength}
+              visibleRange={activeRange}
+              onNextMonth={() => goToAdjacentMonth(1)}
+              onPreviousMonth={() => goToAdjacentMonth(-1)}
+              onSelectDate={selectDate}
+            />
+          </div>
 
-              <NotesPanel
-                accent={monthMetadata.accent}
-                monthLabel={monthMetadata.label}
-                monthNote={monthNote}
-                rangeLabel={
-                  selectedStart && selectedEnd ? selectionLabel : null
-                }
-                rangeNote={rangeNote}
-                onMonthNoteChange={(note) => updateMonthNote(monthKey, note)}
-                onRangeNoteChange={(note) => {
-                  if (completeRangeKey) {
-                    updateRangeNote(completeRangeKey, note);
-                  }
-                }}
-              />
-            </div>
+          <div className="md:min-w-0">
+            <NotesPanel
+              accent={accent}
+              description={draftDescription}
+              entries={visibleEntries}
+              kind={draftKind}
+              selectionLabel={activeRange ? selectionLabel : null}
+              title={draftTitle}
+              onDeleteEntry={deleteEntry}
+              onDescriptionChange={setDraftDescription}
+              onKindChange={setDraftKind}
+              onSave={saveEntry}
+              onTitleChange={setDraftTitle}
+            />
           </div>
         </div>
       </div>

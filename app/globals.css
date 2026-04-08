@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f2f3f9;
+  --background: #f1f5f9;
   --foreground: #111827;
-  --paper-shadow: 0 30px 90px rgba(25, 32, 61, 0.18);
+  --paper-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
 }
 
 @theme inline {
@@ -13,30 +13,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-.dark {
-  --background: #000;
-  --foreground: #edf2ff;
-  --paper-shadow: 0 36px 120px rgba(3, 7, 18, 0.55);
-}
-
 * {
   box-sizing: border-box;
-}
-
-html {
-  /* background:
-    radial-gradient(circle at top, rgba(125, 143, 255, 0.18), transparent 42%),
-    linear-gradient(
-      180deg,
-      var(--background),
-      color-mix(in srgb, var(--background), #ffffff 8%)
-    ); */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   min-height: 100vh;
 }
 
@@ -47,7 +31,7 @@ input {
 }
 
 ::selection {
-  background: rgba(99, 102, 241, 0.22);
+  background: rgba(31, 31, 28, 0.15);
 }
 
 .calendar-scrollbar::-webkit-scrollbar {

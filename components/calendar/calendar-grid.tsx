@@ -3,7 +3,6 @@
 import {
   WEEKDAY_LABELS,
   formatDateKey,
-  formatLongDate,
   formatMonthLabel,
   getMonthGrid,
   isDateWithinRange,
@@ -11,19 +10,14 @@ import {
 } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
-type VisibleRange = {
-  complete: boolean;
-  end: string;
-  start: string;
-};
-
 type CalendarGridProps = {
   accent: string;
   monthDate: Date;
   selectedEnd: string | null;
   selectedStart: string | null;
-  visibleRange: VisibleRange | null;
-  onHoverDate: (dateKey: string | null) => void;
+  selectionLabel: string;
+  selectionLength: number;
+  visibleRange: { end: string; start: string } | null;
   onNextMonth: () => void;
   onPreviousMonth: () => void;
   onSelectDate: (dateKey: string) => void;
@@ -34,32 +28,29 @@ export function CalendarGrid({
   monthDate,
   selectedEnd,
   selectedStart,
+  selectionLabel,
+  selectionLength,
   visibleRange,
-  onHoverDate,
   onNextMonth,
   onPreviousMonth,
   onSelectDate,
 }: CalendarGridProps) {
-  const days = getMonthGrid(monthDate);
-  const todayKey = formatDateKey(new Date());
-
   return (
-    <section className="flex flex-1 flex-col p-4 pt-16 sm:p-6 sm:pt-18 lg:p-8 lg:pt-20">
-      <div className="flex flex-col gap-4 border-slate-200/80 pb-6 dark:border-slate-800 sm:flex-row sm:items-end sm:justify-center">
-        <div className="mx-auto grid w-full max-w-md grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-3 sm:max-w-lg sm:gap-6">
+    <section className="flex flex-1 flex-col rounded-lg border border-slate-200 bg-white p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-3">
           <button
             type="button"
             onClick={onPreviousMonth}
             aria-label="Show previous month"
             className={cn(
-              "inline-flex h-12 w-12 items-center justify-center rounded-full justify-self-start",
-              "hover:bg-white/5 p-3 transition-all duration-300",
+              "inline-flex h-12 w-12 items-center justify-center rounded-full justify-self-start text-slate-800 transition hover:bg-slate-100",
             )}
           >
             <ChevronIcon direction="left" />
           </button>
 
-          <h2 className="px-2 text-center text-2xl font-medium tracking-tight text-[#8E8E8E] sm:text-3xl">
+          <h2 className="px-2 text-center text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl">
             {formatMonthLabel(monthDate)}
           </h2>
 
@@ -68,103 +59,163 @@ export function CalendarGrid({
             onClick={onNextMonth}
             aria-label="Show next month"
             className={cn(
-              "inline-flex h-12 w-12 items-center justify-center rounded-full justify-self-end",
-              "hover:bg-white/5 p-3 transition-all duration-300",
+              "inline-flex h-12 w-12 items-center justify-center rounded-full justify-self-end text-slate-800 transition hover:bg-slate-100",
             )}
           >
             <ChevronIcon direction="right" />
           </button>
         </div>
+
+        <div className="flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+          <div>
+            <p className="text-sm font-medium text-slate-700">
+              {selectionLabel}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {!selectedStart
+                ? "Click a day to place a start date"
+                : !selectedEnd
+                  ? "Pick another day to complete the range, or click the same day again to clear it"
+                  : `${selectionLength} ${
+                      selectionLength === 1 ? "day" : "days"
+                    } highlighted in the current range`}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+      <div className="pt-6">
+        <MonthPanel
+          accent={accent}
+          monthDate={monthDate}
+          selectedEnd={selectedEnd}
+          selectedStart={selectedStart}
+          visibleRange={visibleRange}
+          onSelectDate={onSelectDate}
+        />
+      </div>
+    </section>
+  );
+}
+
+function MonthPanel({
+  accent,
+  monthDate,
+  selectedEnd,
+  selectedStart,
+  visibleRange,
+  onSelectDate,
+}: {
+  accent: string;
+  monthDate: Date;
+  selectedEnd: string | null;
+  selectedStart: string | null;
+  visibleRange: { end: string; start: string } | null;
+  onSelectDate: (dateKey: string) => void;
+}) {
+  const days = getMonthGrid(monthDate);
+  const todayKey = formatDateKey(new Date());
+
+  return (
+    <div>
+      <div className="mb-5 grid grid-cols-7 gap-x-1.5 gap-y-2 text-center text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-slate-500 sm:gap-x-2">
         {WEEKDAY_LABELS.map((day) => (
-          <div key={day} className="py-3">
+          <div key={day} className="py-2">
             {day}
           </div>
         ))}
       </div>
 
-      <div className="mt-2 grid grid-cols-7 gap-0 ">
+      <div className="grid grid-cols-7 gap-y-2 sm:gap-y-2.5">
         {days.map((day) => {
           const dateKey = formatDateKey(day);
           const isCurrentMonth = isSameMonth(day, monthDate);
           const isToday = dateKey === todayKey;
           const isStart = dateKey === selectedStart;
           const isEnd = dateKey === selectedEnd;
+          const isSingleDay = Boolean(
+            visibleRange && visibleRange.start === visibleRange.end,
+          );
           const inRange = isDateWithinRange(dateKey, visibleRange);
-          const isPreviewOnly =
-            visibleRange && !visibleRange.complete && !isStart && !isEnd;
+          const isInsideRange = inRange && !isStart && !isEnd;
+          const isRangeStart = Boolean(
+            visibleRange &&
+            visibleRange.start === dateKey &&
+            visibleRange.start !== visibleRange.end,
+          );
+          const isRangeEnd = Boolean(
+            visibleRange &&
+            visibleRange.end === dateKey &&
+            visibleRange.start !== visibleRange.end,
+          );
 
           return (
             <button
               key={dateKey}
               type="button"
-              aria-label={`Select ${formatLongDate(dateKey)}`}
-              aria-pressed={isStart || isEnd}
               onClick={() => onSelectDate(dateKey)}
-              onMouseEnter={(e) => {
-                onHoverDate(dateKey);
-                (e.currentTarget as HTMLElement).style.transform =
-                  "translateY(1px) scale(1.03)";
-                (e.currentTarget as HTMLElement).style.boxShadow =
-                  `0 8px 20px rgba(0,0,0,0.12)`;
-              }}
-              onMouseLeave={(e) => {
-                onHoverDate(null);
-                (e.currentTarget as HTMLElement).style.transform =
-                  "translateY(0) scale(1)";
-                (e.currentTarget as HTMLElement).style.boxShadow = "none";
-              }}
-              className={`group relative min-h-20 overflow-hidden border-[0.5px] sm:min-h-24 ${
-                inRange
-                  ? "border-transparent"
-                  : "border-slate-200/70 bg-white/70 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950/10 dark:hover:border-slate-900 dark:hover:bg-white/5"
-              } ${!isCurrentMonth ? "text-slate-300 dark:text-slate-600" : ""}`}
-              style={{
-                transformStyle: "preserve-3d",
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                ...(inRange
-                  ? {
-                      backgroundColor: isPreviewOnly
-                        ? `${accent}14`
-                        : `${accent}1F`,
-                    }
-                  : undefined),
-              }}
+              className={cn(
+                `group relative flex min-h-14 items-center justify-center overflow-hidden rounded-sm text-sm font-medium transition sm:min-h-16 ${
+                  !isCurrentMonth ? "text-slate-400" : "text-slate-900"
+                }`,
+              )}
             >
-              <div className="flex flex-col items-center justify-center">
+              {!isInsideRange && !isStart && !isEnd && (
                 <span
-                  className={`relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold transition ${
-                    isStart || isEnd
-                      ? "text-white shadow-lg"
-                      : isCurrentMonth
-                        ? "text-slate-800 dark:text-slate-100"
-                        : "text-inherit"
-                  }`}
-                  style={
-                    isStart || isEnd
-                      ? {
-                          backgroundColor: accent,
-                          boxShadow: `0 14px 30px ${accent}4D`,
-                        }
-                      : undefined
-                  }
-                >
-                  {day.getDate()}
-                </span>
-                {isToday && (
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: accent }}
-                  />
-                )}
-              </div>
+                  className="pointer-events-none absolute inset-1 rounded-sm opacity-0 transition group-hover:opacity-100"
+                  style={{ backgroundColor: `${accent}14` }}
+                />
+              )}
+
+              {isInsideRange && (
+                <span
+                  className="absolute inset-y-2 inset-x-0"
+                  style={{ backgroundColor: `${accent}18` }}
+                />
+              )}
+
+              {isRangeStart && (
+                <span
+                  className="absolute inset-y-2 left-1/2 right-0"
+                  style={{ backgroundColor: `${accent}18` }}
+                />
+              )}
+
+              {isRangeEnd && (
+                <span
+                  className="absolute inset-y-2 left-0 right-1/2"
+                  style={{ backgroundColor: `${accent}18` }}
+                />
+              )}
+
+              {(isStart || isEnd || (isStart && isSingleDay)) && (
+                <span
+                  className="absolute h-12 w-12 rounded-full"
+                  style={{ backgroundColor: accent }}
+                />
+              )}
+
+              <span
+                className={`relative z-10 inline-flex h-8 w-8 items-center justify-center rounded-full ${
+                  isStart || isEnd || (isStart && isSingleDay)
+                    ? "text-white"
+                    : ""
+                }`}
+              >
+                {day.getDate()}
+              </span>
+
+              {isToday && !isStart && !isEnd && (
+                <span
+                  className="absolute bottom-2 h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: accent }}
+                />
+              )}
             </button>
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }
 

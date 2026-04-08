@@ -14,7 +14,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -27,12 +27,19 @@ export function endOfMonth(date: Date) {
 export function startOfWeek(date: Date) {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
-  next.setDate(next.getDate() - next.getDay());
+  const weekdayOffset = (next.getDay() + 6) % 7;
+  next.setDate(next.getDate() - weekdayOffset);
   return next;
 }
 
 export function addMonths(date: Date, amount: number) {
   return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+export function addDays(date: Date, amount: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
 }
 
 export function formatDateKey(date: Date) {
@@ -41,13 +48,6 @@ export function formatDateKey(date: Date) {
   const day = `${date.getDate()}`.padStart(2, "0");
 
   return `${year}-${month}-${day}`;
-}
-
-export function formatMonthKey(date: Date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-
-  return `${year}-${month}`;
 }
 
 export function normalizeMonthKey(dateKey: string) {
@@ -93,26 +93,27 @@ export function sortDateKeys(first: string, second: string) {
   return first <= second ? [first, second] : [second, first];
 }
 
-export function getVisibleRange(
+export function getSelectedRange(
   start: string | null,
   end: string | null,
-  hover: string | null,
-) {
+): { end: string; start: string } | null {
   if (!start) {
     return null;
   }
 
-  if (end) {
-    const [rangeStart, rangeEnd] = sortDateKeys(start, end);
-    return { start: rangeStart, end: rangeEnd, complete: true };
+  if (!end) {
+    return {
+      start,
+      end: start,
+    };
   }
 
-  if (hover) {
-    const [rangeStart, rangeEnd] = sortDateKeys(start, hover);
-    return { start: rangeStart, end: rangeEnd, complete: false };
-  }
+  const [rangeStart, rangeEnd] = sortDateKeys(start, end);
 
-  return { start, end: start, complete: false };
+  return {
+    start: rangeStart,
+    end: rangeEnd,
+  };
 }
 
 export function isDateWithinRange(
@@ -138,21 +139,9 @@ export function getRangeLength(range: { start: string; end: string } | null) {
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
 }
 
-export function getRangeNoteKey(start: string, end: string) {
-  const [rangeStart, rangeEnd] = sortDateKeys(start, end);
-  return `${rangeStart}:${rangeEnd}`;
-}
-
-export function getMonthRange(date: Date) {
-  return {
-    start: startOfMonth(date),
-    end: endOfMonth(date),
-  };
-}
-
 export function getSelectionLabel(range: { start: string; end: string } | null) {
   if (!range) {
-    return "No dates selected";
+    return "Pick a day to start";
   }
 
   if (range.start === range.end) {
@@ -160,4 +149,14 @@ export function getSelectionLabel(range: { start: string; end: string } | null) 
   }
 
   return `${formatShortDate(range.start)} - ${formatLongDate(range.end)}`;
+}
+
+export function getMonthWindow(monthDate: Date) {
+  const start = startOfMonth(monthDate);
+  const end = endOfMonth(monthDate);
+
+  return {
+    start: formatDateKey(start),
+    end: formatDateKey(end),
+  };
 }

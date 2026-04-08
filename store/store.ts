@@ -4,31 +4,39 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import {
   addMonths,
   formatDateKey,
-  formatMonthKey,
-  getMonthRange,
+  getSelectedRange,
   normalizeMonthKey,
-  sortDateKeys,
   startOfMonth,
-  startOfWeek,
 } from "@/lib/calendar";
 
-type CalendarPreset = "today" | "this-week" | "this-month" | "clear";
+type PlannerKind = "task" | "event";
+
+type PlannerEntry = {
+  createdAt: string;
+  description: string;
+  end: string;
+  id: string;
+  kind: PlannerKind;
+  start: string;
+  title: string;
+};
 
 type CalendarState = {
-  viewedMonth: string;
-  hoveredDate: string | null;
-  selectedStart: string | null;
+  deleteEntry: (entryId: string) => void;
+  draftDescription: string;
+  draftKind: PlannerKind;
+  draftTitle: string;
+  entries: PlannerEntry[];
   selectedEnd: string | null;
-  monthNotes: Record<string, string>;
-  rangeNotes: Record<string, string>;
+  selectedStart: string | null;
+  viewedMonth: string;
   goToAdjacentMonth: (direction: 1 | -1) => void;
-  setHoveredDate: (dateKey: string | null) => void;
-  setViewedMonth: (dateKey: string) => void;
+  saveEntry: () => void;
   selectDate: (dateKey: string) => void;
-  applyPreset: (preset: CalendarPreset) => void;
-  clearSelection: () => void;
-  updateMonthNote: (monthKey: string, note: string) => void;
-  updateRangeNote: (rangeKey: string, note: string) => void;
+  setDraftDescription: (value: string) => void;
+  setDraftKind: (kind: PlannerKind) => void;
+  setDraftTitle: (value: string) => void;
+  setViewedMonth: (dateKey: string) => void;
 };
 
 const today = new Date();
@@ -37,12 +45,17 @@ const initialMonth = formatDateKey(startOfMonth(today));
 export const useCalendarStore = create<CalendarState>()(
   persist(
     (set) => ({
+      deleteEntry: (entryId) =>
+        set((state) => ({
+          entries: state.entries.filter((entry) => entry.id !== entryId),
+        })),
+      draftDescription: "",
+      draftKind: "task",
+      draftTitle: "",
+      entries: [],
+      selectedEnd: null,
+      selectedStart: null,
       viewedMonth: initialMonth,
-      hoveredDate: null,
-      selectedStart: formatDateKey(today),
-      selectedEnd: formatDateKey(today),
-      monthNotes: {},
-      rangeNotes: {},
       goToAdjacentMonth: (direction) =>
         set((state) => {
           const nextMonth = addMonths(normalizeMonthKey(state.viewedMonth), direction);
@@ -51,110 +64,91 @@ export const useCalendarStore = create<CalendarState>()(
             viewedMonth: formatDateKey(startOfMonth(nextMonth)),
           };
         }),
-      setHoveredDate: (dateKey) => set({ hoveredDate: dateKey }),
-      setViewedMonth: (dateKey) =>
-        set({
-          viewedMonth: formatDateKey(startOfMonth(normalizeMonthKey(dateKey))),
+      saveEntry: () =>
+        set((state) => {
+          const range = getSelectedRange(state.selectedStart, state.selectedEnd);
+
+          if (!range || !state.draftTitle.trim()) {
+            return state;
+          }
+
+          return {
+            draftDescription: "",
+            draftKind: "task",
+            draftTitle: "",
+            entries: [
+              {
+                createdAt: new Date().toISOString(),
+                description: state.draftDescription.trim(),
+                end: range.end,
+                id: `${range.start}:${range.end}:${Date.now()}`,
+                kind: state.draftKind,
+                start: range.start,
+                title: state.draftTitle.trim(),
+              },
+              ...state.entries,
+            ],
+          };
         }),
       selectDate: (dateKey) =>
         set((state) => {
-          // Clicking after a completed range starts a fresh selection cycle.
-          if (!state.selectedStart || state.selectedEnd) {
+          const activeRange = getSelectedRange(state.selectedStart, state.selectedEnd);
+
+          if (state.selectedStart && !state.selectedEnd && state.selectedStart === dateKey) {
             return {
-              selectedStart: dateKey,
+              draftDescription: "",
+              draftKind: "task",
+              draftTitle: "",
               selectedEnd: null,
-              hoveredDate: null,
+              selectedStart: null,
+            };
+          }
+
+          if (activeRange && dateKey >= activeRange.start && dateKey <= activeRange.end) {
+            return {
+              draftDescription: "",
+              draftKind: "task",
+              draftTitle: "",
+              selectedEnd: null,
+              selectedStart: null,
+            };
+          }
+
+          if (state.selectedStart && !state.selectedEnd) {
+            return {
+              selectedEnd: dateKey,
               viewedMonth: formatDateKey(startOfMonth(normalizeMonthKey(dateKey))),
             };
           }
 
-          const [start, end] = sortDateKeys(state.selectedStart, dateKey);
-
           return {
-            selectedStart: start,
-            selectedEnd: end,
-            hoveredDate: null,
+            draftDescription: "",
+            draftKind: "task",
+            draftTitle: "",
+            selectedEnd: null,
+            selectedStart: dateKey,
             viewedMonth: formatDateKey(startOfMonth(normalizeMonthKey(dateKey))),
           };
         }),
-      applyPreset: (preset) =>
-        set(() => {
-          const now = new Date();
-          const todayKey = formatDateKey(now);
-
-          if (preset === "clear") {
-            return {
-              selectedStart: null,
-              selectedEnd: null,
-              hoveredDate: null,
-              viewedMonth: formatDateKey(startOfMonth(now)),
-            };
-          }
-
-          if (preset === "today") {
-            return {
-              selectedStart: todayKey,
-              selectedEnd: todayKey,
-              hoveredDate: null,
-              viewedMonth: formatDateKey(startOfMonth(now)),
-            };
-          }
-
-          if (preset === "this-week") {
-            const weekStart = startOfWeek(now);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekStart.getDate() + 6);
-
-            return {
-              selectedStart: formatDateKey(weekStart),
-              selectedEnd: formatDateKey(weekEnd),
-              hoveredDate: null,
-              viewedMonth: formatDateKey(startOfMonth(now)),
-            };
-          }
-
-          const { start, end } = getMonthRange(now);
-
-          return {
-            selectedStart: formatDateKey(start),
-            selectedEnd: formatDateKey(end),
-            hoveredDate: null,
-            viewedMonth: formatDateKey(startOfMonth(now)),
-          };
-        }),
-      clearSelection: () =>
+      setDraftDescription: (value) => set({ draftDescription: value }),
+      setDraftKind: (kind) => set({ draftKind: kind }),
+      setDraftTitle: (value) => set({ draftTitle: value }),
+      setViewedMonth: (dateKey) =>
         set({
-          selectedStart: null,
-          selectedEnd: null,
-          hoveredDate: null,
+          viewedMonth: formatDateKey(startOfMonth(normalizeMonthKey(dateKey))),
         }),
-      updateMonthNote: (monthKey, note) =>
-        set((state) => ({
-          monthNotes: {
-            ...state.monthNotes,
-            [formatMonthKey(normalizeMonthKey(monthKey))]: note,
-          },
-        })),
-      updateRangeNote: (rangeKey, note) =>
-        set((state) => ({
-          rangeNotes: {
-            ...state.rangeNotes,
-            [rangeKey]: note,
-          },
-        })),
     }),
     {
       name: "wall-calendar-planner",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        viewedMonth: state.viewedMonth,
-        selectedStart: state.selectedStart,
+        entries: state.entries,
         selectedEnd: state.selectedEnd,
-        monthNotes: state.monthNotes,
-        rangeNotes: state.rangeNotes,
+        selectedStart: state.selectedStart,
+        viewedMonth: state.viewedMonth,
       }),
     },
   ),
 );
 
-export type { CalendarPreset };
+export type { PlannerEntry, PlannerKind };
