@@ -4,22 +4,25 @@ import Image, { type StaticImageData } from "next/image";
 
 import { AnimatePresence, motion } from "motion/react";
 
+type MonthStats = {
+  busiestWeekCount: number;
+  busiestWeekLabel: string;
+  savedItems: number;
+  selectedDays: number;
+  weekendDays: number;
+};
+
 type HeroPanelProps = {
   image: StaticImageData;
   label: string;
-  rangeLabel: string | null;
+  stats: MonthStats;
   subtitle: string;
 };
 
-export function HeroPanel({
-  image,
-  label,
-  rangeLabel,
-  subtitle,
-}: HeroPanelProps) {
+export function HeroPanel({ image, label, stats, subtitle }: HeroPanelProps) {
   return (
-    <section className="flex h-full flex-col gap-5 ">
-      <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-900 shadow-[0_24px_60px_rgba(12,28,28,0.18)]">
+    <section className="flex h-full flex-col gap-4">
+      <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-900 shadow-[0_24px_60px_rgba(12,28,28,0.18)] transition-transform duration-300 hover:-translate-y-0.5">
         <AnimatePresence mode="wait">
           <motion.div
             key={label}
@@ -50,24 +53,61 @@ export function HeroPanel({
         </AnimatePresence>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
-        <p className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-          Month overview
+      <div className="rounded-lg border border-slate-200 bg-white p-4 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-md">
+        <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500">
+          Stats
         </p>
-        <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-800">
+        <h3 className="mt-2 text-xl font-semibold tracking-tight text-slate-800">
           {label}
         </h3>
-        <p className="mt-3 text-sm leading-6 text-slate-600">{subtitle}</p>
-        <div className="mt-5 rounded-[1.25rem] bg-slate-50 p-4">
-          <p className="text-sm font-medium text-slate-700">
-            {rangeLabel ?? "Pick a day to start"}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Select a start date, then an end date to highlight a range. Clicking
-            within the selected range clears it.
-          </p>
+        <p className="mt-2 text-[13px] leading-5 text-slate-600">{subtitle}</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <StatCard
+            helper="This month"
+            label="Items"
+            value={stats.savedItems.toString()}
+          />
+          <StatCard
+            helper="Current range"
+            label="Selected"
+            value={stats.selectedDays.toString()}
+          />
+          <StatCard
+            helper="This month"
+            label="Weekends"
+            value={stats.weekendDays.toString()}
+          />
+          <StatCard
+            helper={`${stats.busiestWeekCount} saved item${
+              stats.busiestWeekCount === 1 ? "" : "s"
+            }`}
+            label="Peak week"
+            value={stats.busiestWeekLabel}
+          />
         </div>
       </div>
     </section>
+  );
+}
+
+function StatCard({
+  helper,
+  label,
+  value,
+}: {
+  helper: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3 transition-transform duration-300 hover:-translate-y-0.5">
+      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 text-lg font-semibold tracking-tight text-slate-800">
+        {value}
+      </p>
+      <p className="mt-1 text-[11px] leading-5 text-slate-500">{helper}</p>
+    </div>
   );
 }

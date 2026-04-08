@@ -36,7 +36,7 @@ export function CalendarGrid({
   onSelectDate,
 }: CalendarGridProps) {
   return (
-    <section className="flex flex-1 flex-col rounded-lg border border-slate-200 bg-white p-4 sm:p-6 lg:p-8">
+    <section className="flex flex-1 flex-col rounded-lg border border-slate-200 bg-white p-4 transition-transform duration-300 hover:-translate-y-0.5 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-3">
           <button
@@ -169,34 +169,34 @@ function MonthPanel({
 
               {isInsideRange && (
                 <span
-                  className="absolute inset-y-2 inset-x-0"
+                  className="absolute inset-y-3 inset-x-0 sm:inset-y-2"
                   style={{ backgroundColor: `${accent}18` }}
                 />
               )}
 
               {isRangeStart && (
                 <span
-                  className="absolute inset-y-2 left-1/2 right-0"
+                  className="absolute inset-y-3 left-1/2 right-0 sm:inset-y-2"
                   style={{ backgroundColor: `${accent}18` }}
                 />
               )}
 
               {isRangeEnd && (
                 <span
-                  className="absolute inset-y-2 left-0 right-1/2"
+                  className="absolute inset-y-3 left-0 right-1/2 sm:inset-y-2"
                   style={{ backgroundColor: `${accent}18` }}
                 />
               )}
 
               {(isStart || isEnd || (isStart && isSingleDay)) && (
                 <span
-                  className="absolute h-12 w-12 rounded-full"
+                  className="absolute h-9 w-9 rounded-full sm:h-12 sm:w-12"
                   style={{ backgroundColor: accent }}
                 />
               )}
 
               <span
-                className={`relative z-10 inline-flex h-8 w-8 items-center justify-center rounded-full ${
+                className={`relative z-10 inline-flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
                   isStart || isEnd || (isStart && isSingleDay)
                     ? "text-white"
                     : ""

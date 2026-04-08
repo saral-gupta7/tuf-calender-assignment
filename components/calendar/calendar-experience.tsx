@@ -1,11 +1,15 @@
 "use client";
 
 import {
+  addDays,
+  endOfMonth,
   getMonthWindow,
   getRangeLength,
   getSelectedRange,
   getSelectionLabel,
   normalizeMonthKey,
+  startOfMonth,
+  startOfWeek,
 } from "@/lib/calendar";
 import { getMonthMetadata } from "@/lib/month-metadata";
 import { useCalendarStore } from "@/store/store";
@@ -44,6 +48,11 @@ export function CalendarExperience() {
     (entry) => entry.start <= visibleWindow.end && entry.end >= visibleWindow.start,
   );
   const accent = monthMetadata.accent;
+  const monthStats = getMonthStats({
+    entries: visibleEntries,
+    monthDate,
+    selectedDays: selectionLength,
+  });
 
   return (
     <main className="min-h-screen px-3 py-3 text-slate-900 sm:px-5 sm:py-5">
@@ -53,7 +62,7 @@ export function CalendarExperience() {
             <HeroPanel
               image={monthMetadata.image}
               label={monthMetadata.label}
-              rangeLabel={activeRange ? selectionLabel : null}
+              stats={monthStats}
               subtitle={monthMetadata.subtitle}
             />
           </div>
@@ -63,7 +72,7 @@ export function CalendarExperience() {
               <HeroPanel
                 image={monthMetadata.image}
                 label={monthMetadata.label}
-                rangeLabel={activeRange ? selectionLabel : null}
+                stats={monthStats}
                 subtitle={monthMetadata.subtitle}
               />
             </div>
@@ -101,4 +110,80 @@ export function CalendarExperience() {
       </div>
     </main>
   );
+}
+
+function getMonthStats({
+  entries,
+  monthDate,
+  selectedDays,
+}: {
+  entries: Array<{ end: string; start: string }>;
+  monthDate: Date;
+  selectedDays: number;
+}) {
+  const monthStart = startOfMonth(monthDate);
+  const monthEnd = endOfMonth(monthDate);
+  const gridStart = startOfWeek(monthStart);
+  const weekendDays = countWeekendDays(monthStart, monthEnd);
+  const weekCounts = new Map<number, number>();
+
+  for (const entry of entries) {
+    const entryStart = normalizeMonthKey(entry.start);
+    const entryEnd = normalizeMonthKey(entry.end);
+    const clippedStart = entryStart < monthStart ? monthStart : entryStart;
+    const clippedEnd = entryEnd > monthEnd ? monthEnd : entryEnd;
+    const visitedWeeks = new Set<number>();
+
+    for (
+      let cursor = new Date(clippedStart);
+      cursor <= clippedEnd;
+      cursor = addDays(cursor, 1)
+    ) {
+      const diffInDays = Math.floor(
+        (cursor.getTime() - gridStart.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const weekIndex = Math.floor(diffInDays / 7);
+
+      if (!visitedWeeks.has(weekIndex)) {
+        weekCounts.set(weekIndex, (weekCounts.get(weekIndex) ?? 0) + 1);
+        visitedWeeks.add(weekIndex);
+      }
+    }
+  }
+
+  let busiestWeekIndex = 0;
+  let busiestWeekCount = 0;
+
+  for (const [weekIndex, count] of weekCounts.entries()) {
+    if (count > busiestWeekCount) {
+      busiestWeekIndex = weekIndex;
+      busiestWeekCount = count;
+    }
+  }
+
+  return {
+    busiestWeekCount,
+    busiestWeekLabel: `Week ${busiestWeekIndex + 1}`,
+    savedItems: entries.length,
+    selectedDays,
+    weekendDays,
+  };
+}
+
+function countWeekendDays(monthStart: Date, monthEnd: Date) {
+  let total = 0;
+
+  for (
+    let cursor = new Date(monthStart);
+    cursor <= monthEnd;
+    cursor = addDays(cursor, 1)
+  ) {
+    const day = cursor.getDay();
+
+    if (day === 0 || day === 6) {
+      total += 1;
+    }
+  }
+
+  return total;
 }
