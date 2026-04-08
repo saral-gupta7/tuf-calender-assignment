@@ -1,50 +1,88 @@
-# TUF Frontend Challenge
+# TUF Calendar Assignment
 
-An interactive wall-calendar experience built for the frontend engineering assignment. The app combines month-specific imagery, date-range selection, and integrated notes in a single responsive layout.
+A polished calendar planning experience built for the TUF frontend assignment. The app combines month-specific imagery, date-range selection, task and event planning, and responsive UI patterns in a layout designed to feel premium on both desktop and mobile.
 
-## Feature Highlights
+## Links
 
-- Physical wall-calendar inspired layout with a large monthly hero image.
-- Month-specific artwork that changes as the user navigates the calendar.
-- Date-range selection with clear start, end, and in-between states.
-- Integrated monthly notes plus notes attached to completed date ranges.
-- Local persistence with Zustand so the selection and notes survive refreshes.
-- Responsive layout tuned for both desktop and mobile use.
-- Light and dark presentation modes.
+- Live Demo: [calendar.srlgpta.xyz](https://calendar.srlgpta.xyz/)
+- GitHub Repository: [saral-gupta7/tuf-calender-assignment](https://github.com/saral-gupta7/tuf-calender-assignment)
 
-## Stack
+## What It Includes
 
-- Next.js 16 App Router
+- Month-aware visual design with dedicated artwork and accent colors for each month.
+- Single-month calendar with range selection, hover states, and mobile-friendly interaction sizing.
+- Task and event creation for a selected day or date range.
+- Local persistence using Zustand so saved entries remain available after refresh.
+- Compact month stats panel for a quick overview of saved items, selected days, weekends, and busiest week.
+- A single polished theme in the current implementation. A manual light/dark toggle is not available yet.
+- Responsive 3-column desktop layout that collapses cleanly for tablet and mobile screens.
+
+## Tech Stack
+
+- Next.js 16 with App Router
 - React 19
 - TypeScript
 - Tailwind CSS v4
 - Zustand
-- Motion
+- Motion for React
 
-## Architecture Notes
+## Project Structure
 
-- `app/page.tsx` keeps the route as a server component and mounts the interactive client experience.
-- `components/calendar/*` splits the UI into focused pieces: hero, grid, and notes.
-- `store/store.ts` owns the calendar interactions and persistence logic to avoid prop drilling.
-- `lib/calendar.ts` contains pure date helpers, keeping selection logic separate from rendering.
-- `lib/month-metadata.ts` maps each month to its image and visual styling.
+- `app/page.tsx` renders the main calendar experience.
+- `components/calendar/*` contains the hero panel, calendar grid, and planner sidebar.
+- `store/store.ts` manages selection state, entries, and persistence.
+- `lib/calendar.ts` contains date utilities and range helpers.
+- `lib/month-metadata.ts` maps each month to its artwork, copy, and accent color.
 
-## Running Locally
+## Core Interactions
+
+1. Click a day to set the start date.
+2. Click another day to complete the range.
+3. Add a task or event with a title and description.
+4. Save the entry to store it in local browser storage.
+5. Reopen the app later and continue from the saved state.
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh) installed locally
+
+### Install dependencies
 
 ```bash
-npm install
-npm run dev
+bun install
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+### Start the development server
 
-## Scripts
+```bash
+bun run dev
+```
 
-- `npm run dev` starts the development server.
-- `npm run build` creates a production build.
-- `npm run lint` runs ESLint.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Submission Checklist
+### Production build
 
-- Add your deployed URL to this README if you publish the project.
-- Add your screen-recording link showing desktop, mobile, range selection, and notes behavior.
+```bash
+bun run build
+bun run start
+```
+
+### Lint the project
+
+```bash
+bun run lint
+```
+
+## Available Scripts
+
+- `bun run dev` starts the local development server.
+- `bun run build` creates the production build.
+- `bun run start` runs the built app in production mode.
+- `bun run lint` runs ESLint with `--fix`.
+
+## Notes
+
+- Saved tasks and events are stored in the browser with Zustand persistence.
+- The current codebase ships a single polished visual theme.
